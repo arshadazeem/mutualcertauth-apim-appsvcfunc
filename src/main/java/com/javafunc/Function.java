@@ -37,9 +37,9 @@ public class Function {
 	private static final String EMPTY_STRING = "";
 
 	//private static final String THUMBPRINT_APIM = "CAD5F4FAA167E153CE34AF0581F9F4C5B71B5FAB";
-	private static final String THUMBPRINT_APIM = System.getenv().getOrDefault("THUMBPRINT_APIM", "CAD5F4FAA167E153CE34AF0581F9F4C5B71B5FAB");
-	private static final String THUMBPRINT_POSTMAN = System.getenv().getOrDefault("THUMBPRINT_POSTMAN","4ae5e3324aa04fc59f69bda2e26eef6556deb2aa");
-	private static final String CN = "arazeem.com";
+	private static final String THUMBPRINT_APIM = System.getenv().getOrDefault("THUMBPRINT_APIM", "<Enter_Thumbprint>");
+	private static final String THUMBPRINT_POSTMAN = System.getenv().getOrDefault("THUMBPRINT_POSTMAN","<Enter_Thumbprint>");
+	private static final String CN = "ENTER_CN";
 	
 	private X509Certificate x509Certificate;
 
