@@ -58,15 +58,21 @@ public class Function {
 		String clientCert = reqHeaders.get("x-arr-clientcert");
 		System.out.println("ClientCert is: " + clientCert);
 		context.getLogger().info("ClientCert is: " + clientCert);	
+		
+		CertAuthResponse response = new CertAuthResponse();
+		response.setHeaders(reqHeaders);
+		
+		if(clientCert == null || EMPTY_STRING.equals(clientCert))
+		{
+			response.setMessage("Incoming Request does not have a client certificate");
+			return request.createResponseBuilder(HttpStatus.UNAUTHORIZED).body(response).build();
+		}
 
 		try {
 			createX509Cert(clientCert);
 		} catch (CertificateException e) {
 			e.printStackTrace();
 		}
-		
-		CertAuthResponse response = new CertAuthResponse();
-		response.setHeaders(reqHeaders);
 		
 
 		X509Certificate x509cert = getCertificate();
