@@ -64,7 +64,7 @@ public class Function {
 		
 		if(clientCert == null || EMPTY_STRING.equals(clientCert))
 		{
-			response.setMessage("Incoming Request does not have a client certificate");
+			response.setMessage("Error: Incoming Request does not have a client certificate!!");
 			return request.createResponseBuilder(HttpStatus.UNAUTHORIZED).body(response).build();
 		}
 
@@ -84,20 +84,20 @@ public class Function {
 		
 		if(!thumbprintIsValid())
 		{
-			response.setMessage("Certificate Validation Failed - Configured Thumb print does not match the passed cert: " + this.getCertDigest());
+			response.setMessage("Error: Certificate Validation Failed - Configured Thumb print does not match the passed cert: " + this.getCertDigest());
 			return request.createResponseBuilder(HttpStatus.UNAUTHORIZED).body(response).build();
 		}
 		
 		if(!certificateHasNotExpired())
 		{
-			response.setMessage("Certificate Validation Failed - Certificate Expired");
+			response.setMessage("Error: Certificate Validation Failed - Certificate Expired");
 			return request.createResponseBuilder(HttpStatus.UNAUTHORIZED).body(response).build();
 		}
 		
 		
 		if(!x509cert.getIssuerDN().getName().contains(CN))
 		{
-			response.setMessage("Certificate Validation Failed - Issuer Name does not match");
+			response.setMessage("Error: Certificate Validation Failed - Issuer Name does not match");
 			return request.createResponseBuilder(HttpStatus.UNAUTHORIZED).body(response).build();
 		}
 		
