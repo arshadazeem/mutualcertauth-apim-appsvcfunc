@@ -1,7 +1,7 @@
 # mutualcertauth-apim-appsvcfunc
 This application validates incoming client certificates in Azure Functions or App Services using Java.
 
-This can be easily integrated with any client of an Azure function/AppService. E.g. If APIM is infront of the Function/AppService, we can enable client cert authentication on APIM (https://docs.microsoft.com/en-us/azure/api-management/api-management-howto-mutual-certificates), and pass APIMs client certs to the backend Functon/AppService)
+This can be easily integrated with any client of an Azure function/AppService. E.g. If APIM is infront of the Function/AppService, we can enable client cert authentication on APIM (as documented at https://docs.microsoft.com/en-us/azure/api-management/api-management-howto-mutual-certificates), and pass APIMs client certs to the backend Functon/AppService)
 
 <b>1. Steps to Build: </b>
 
