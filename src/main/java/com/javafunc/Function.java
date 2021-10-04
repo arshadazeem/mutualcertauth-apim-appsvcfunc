@@ -36,15 +36,17 @@ public class Function {
 
 	private static final String EMPTY_STRING = "";
 	private static final String THUMBPRINT_APIM = System.getenv().getOrDefault("THUMBPRINT_APIM", "<Enter_Thumbprint>");
-	private static final String THUMBPRINT_POSTMAN = System.getenv().getOrDefault("THUMBPRINT_POSTMAN","<Enter_Thumbprint>");
+	private static final String THUMBPRINT_POSTMAN = System.getenv().getOrDefault("THUMBPRINT_POSTMAN",
+			"<Enter_Thumbprint>");
 	private static final String CN = "ENTER_CN";
-	
+
 	private X509Certificate x509Certificate;
 
 	/**
-	 * This function listens at endpoint "/api/certauth". 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws CertificateEncodingException 
+	 * This function listens at endpoint "/api/certauth".
+	 * 
+	 * @throws NoSuchAlgorithmException
+	 * @throws CertificateEncodingException
 	 */
 	@FunctionName("certauth")
 	public HttpResponseMessage run(@HttpTrigger(name = "req", methods = { HttpMethod.GET,
@@ -57,13 +59,12 @@ public class Function {
 
 		String clientCert = reqHeaders.get("x-arr-clientcert");
 		System.out.println("ClientCert is: " + clientCert);
-		context.getLogger().info("ClientCert is: " + clientCert);	
-		
+		context.getLogger().info("ClientCert is: " + clientCert);
+
 		CertAuthResponse response = new CertAuthResponse();
 		response.setHeaders(reqHeaders);
-		
-		if(clientCert == null || EMPTY_STRING.equals(clientCert))
-		{
+
+		if (clientCert == null || EMPTY_STRING.equals(clientCert)) {
 			response.setMessage("Error: Incoming Request does not have a client certificate!!");
 			return request.createResponseBuilder(HttpStatus.UNAUTHORIZED).body(response).build();
 		}
@@ -73,105 +74,103 @@ public class Function {
 		} catch (CertificateException e) {
 			e.printStackTrace();
 		}
-		
 
 		X509Certificate x509cert = getCertificate();
-		
+
 		response.setMessage("Certificate Validation successful");
 		response.setIssuer(x509cert.getIssuerDN().getName());
 		response.setSerialNumber(x509cert.getSerialNumber());
 		response.setCn(x509cert.getIssuerDN().getName());
-		
-		if(!thumbprintIsValid())
-		{
-			response.setMessage("Error: Certificate Validation Failed - Configured Thumb print does not match the passed cert: " + this.getCertDigest());
+
+		if (!thumbprintIsValid()) {
+			response.setMessage(
+					"Error: Certificate Validation Failed - Configured Thumb print does not match the passed cert: "
+							+ this.getCertDigest());
 			return request.createResponseBuilder(HttpStatus.UNAUTHORIZED).body(response).build();
 		}
-		
-		if(!certificateHasNotExpired())
-		{
+
+		if (!certificateHasNotExpired()) {
 			response.setMessage("Error: Certificate Validation Failed - Certificate Expired");
 			return request.createResponseBuilder(HttpStatus.UNAUTHORIZED).body(response).build();
 		}
-		
-		
-		if(!x509cert.getIssuerDN().getName().contains(CN))
-		{
+
+		if (!x509cert.getIssuerDN().getName().contains(CN)) {
 			response.setMessage("Error: Certificate Validation Failed - Issuer Name does not match");
 			return request.createResponseBuilder(HttpStatus.UNAUTHORIZED).body(response).build();
 		}
-		
+
 		return request.createResponseBuilder(HttpStatus.OK).body(response).build();
-		
+
 	}
 
 	private void createX509Cert(String clientCert) throws CertificateException {
-	//	clientCert = clientCert.replaceAll(X509Factory.BEGIN_CERT, EMPTY_STRING).replaceAll(X509Factory.END_CERT, EMPTY_STRING);
+		// clientCert = clientCert.replaceAll(X509Factory.BEGIN_CERT,
+		// EMPTY_STRING).replaceAll(X509Factory.END_CERT, EMPTY_STRING);
 		CertificateFactory cf = CertificateFactory.getInstance("X.509");
 		byte[] base64Bytes = Base64.getDecoder().decode(clientCert);
 		x509Certificate = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(base64Bytes));
 		this.setCertificate(x509Certificate);
 
 	}
-	
-	 /**
-     * Check certificate's timestamp.
-     * @return Returns true if the certificate has not expired. Returns false if it has expired.
-     */
-    private boolean certificateHasNotExpired() {
-        Date currentTime = new java.util.Date();
-        try {
-            this.getCertificate().checkValidity(currentTime);
-        } catch (CertificateExpiredException | CertificateNotYetValidException e) {
-            return false;
-        }
-        return true;
-    }
 
+	/**
+	 * Check certificate's timestamp.
+	 * 
+	 * @return Returns true if the certificate has not expired. Returns false if it
+	 * has expired.
+	 */
+	private boolean certificateHasNotExpired() {
+		Date currentTime = new java.util.Date();
+		try {
+			this.getCertificate().checkValidity(currentTime);
+		} catch (CertificateExpiredException | CertificateNotYetValidException e) {
+			return false;
+		}
+		return true;
+	}
+
+	/*
+	 * retyrbs a list of allowed thumbprints
+	 */
 	private List<String> getAllowedThumbprints() {
-		List<String> thumbPrints = new ArrayList<>();		
-	
+		List<String> thumbPrints = new ArrayList<>();
 		thumbPrints.add(THUMBPRINT_APIM.toLowerCase());
 		thumbPrints.add(THUMBPRINT_POSTMAN.toLowerCase());
 
 		return thumbPrints;
 
 	}
-	
-	   
-    /**
-     * Check the certificate's thumbprint matches the given one.
-     * @return Returns true if the thumbprints match. False otherwise.
-     */
-    private boolean thumbprintIsValid() throws NoSuchAlgorithmException, CertificateEncodingException {
-        String digestHex = getCertDigest();
-        
-        System.out.println("*** digestHex is: " + digestHex);
-        
-        return this.getAllowedThumbprints().contains(digestHex.toLowerCase());
-        
-    }
+
+	/**
+	 * Check the certificate's thumbprint matches the given one.
+	 * 
+	 * @return Returns true if the thumbprints match. False otherwise.
+	 */
+	private boolean thumbprintIsValid() throws NoSuchAlgorithmException, CertificateEncodingException {
+		String digestHex = getCertDigest();
+		System.out.println("*** digestHex is: " + digestHex);
+		return this.getAllowedThumbprints().contains(digestHex.toLowerCase());
+	}
 
 	private String getCertDigest() throws NoSuchAlgorithmException, CertificateEncodingException {
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
-        byte[] der = this.getCertificate().getEncoded();
-        md.update(der);
-        byte[] digest = md.digest();
-        String digestHex = DatatypeConverter.printHexBinary(digest);
+		byte[] der = this.getCertificate().getEncoded();
+		md.update(der);
+		byte[] digest = md.digest();
+		String digestHex = DatatypeConverter.printHexBinary(digest);
 		return digestHex;
 	}
-	
+
 	private void getCN() throws CertificateException {
 		this.getCertificate().getSubjectX500Principal().getName();
-
 	}
-	
-	public X509Certificate getCertificate() {
-        return x509Certificate;
-    }
 
-    public void setCertificate(X509Certificate certificate) {
-        this.x509Certificate = certificate;
-    }
- 
+	public X509Certificate getCertificate() {
+		return x509Certificate;
+	}
+
+	public void setCertificate(X509Certificate certificate) {
+		this.x509Certificate = certificate;
+	}
+
 }
